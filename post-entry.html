@@ -1,0 +1,111 @@
+<div id="post-entry">
+	<form id="post-form" method="POST" enctype="multipart/form-data">
+		
+		<textarea id="post-text" name="post-text" placeholder="Post text..."></textarea>
+		
+		<label for="upload-image"><span class="material-icons">image</span></label>
+		<input type="file" id="upload-image" name="upload-image[]" accept=".jpg, .png, .gif" multiple onchange="readURL(this);">
+		<label for="upload-file"><span class="material-icons">attach_file</label>
+		<input type="file" id="upload-file" name="upload-file[]" multiple onchange="listFiles(this);">
+		<input type="submit" value="Post">
+		<div id="file-list">
+		
+		</div>
+		<div id="img-preview">
+		
+		</div>
+		<script>
+			var fileList = [];
+			var imageList = [];
+			var formElement = document.getElementById("post-form");
+			
+			formElement.addEventListener('submit', function(event){
+				var formData = new FormData(formElement);
+				event.preventDefault();
+				
+				sendData(formData);
+				
+			});
+			
+			function sendData(formData){
+				
+				var request = new XMLHttpRequest();
+				request.open("POST", "controllers/post-validation.php");
+				request.send(formData);
+				
+				request.onreadystatechange = function(){
+					if(request.readyState === 4){
+						if(request.status === 200){
+							var parser = new DOMParser();
+							response = parser.parseFromString(request.response, "text/html").documentElement;
+							chill = response.children;
+							var realResponse;
+							for(var i = 0; i < chill.length; i++){
+								if(chill[i].tagName==="BODY")
+									realResponse = chill[i].children[0];
+							}
+							oldImage = document.getElementById("upload-image");
+							oldFile = document.getElementById("upload-file");
+							oldImage.parentNode.replaceChild(oldImage.cloneNode(), oldImage);
+							oldFile.parentNode.replaceChild(oldFile.cloneNode(), oldFile);
+							document.getElementById("posts").prepend(realResponse);
+							document.getElementById("post-text").value = "";
+							document.getElementById("file-list").innerHTML = "";
+							document.getElementById("img-preview").innerHTML = "";
+							
+							
+							
+						}
+						}else{
+							console.log("Error: " + request.status);
+						}
+				}
+			}
+			
+			function readURL(input){
+				placeHere = document.getElementById("img-preview");
+				if(input.files.length > 0)
+					placeHere.innerHTML = "<p><strong>Images Selected:</strong></p>";
+				else
+					placeHere.innerHTML = "";
+				
+				
+				for(const file of input.files){
+					img = document.createElement("img");
+					img.src = URL.createObjectURL(file);
+					placeHere.appendChild(img);
+				}
+				fileList = [];
+				for(var i = 0; i < input.files.length; i++){
+					fileList.push(input.files[i]);
+				}
+				console.log(fileList);
+			}
+			
+			function listFiles(input){
+				placeHere = document.getElementById("file-list");
+				if(input.files.length > 0)
+					placeHere.innerHTML = "<p><strong>Files Selected:</strong></p>";
+				else
+					placeHere.innerHTML = "";
+				list = document.createElement("p");
+				
+				for(i = 0; i < input.files.length; i++){
+					console.log(input.files[i].name);
+					list.innerHTML += input.files[i].name;
+					if(i < input.files.length - 1){
+						list.innerHTML += ", ";
+					}
+				}
+				imageList = [];
+				placeHere.appendChild(list);
+				for(var i = 0; i < input.files.length; i++){
+					imageList.push(input.files[i]);
+				}
+				console.log(imageList);
+			}
+		
+		
+		</script>
+	</form>
+</div>
